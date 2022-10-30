@@ -182,24 +182,24 @@ Equality is defined by TESTFN if non-nil or by `equal' if nil."
 (related-files-add-jumper-type
  '(cons
    :tag "Transformation recipe"
-   (const :tag "" recipe)
+   (const recipe)
    (set
     :tag "Transformations"
     (list :inline t
           :format "%t: %v\n%d"
           :tag "Remove a string from the end of the filename, e.g., \".el\""
-          (const :remove-suffix :tag "")
+          (const :remove-suffix)
           (string :tag "Suffix to remove" :value ".c"))
     (list :inline t
           :format "%t: %v\n%d"
           :tag "Add a string at the end of the filename, e.g., \"-tests.el\""
-          (const :add-suffix :tag "")
+          (const :add-suffix)
           (string :tag "Suffix to add" :value ".h"))
     (list :inline t
           :tag "Case transformer"
           :format "%t: %v%h\n"
           :doc "Useful when a file and its related files have names with different case"
-          (const :case-transformer :tag "")
+          (const :case-transformer)
           (choice
            :value capitalize
            (const :tag "Capitalize the filename" capitalize)
@@ -208,12 +208,12 @@ Equality is defined by TESTFN if non-nil or by `equal' if nil."
           :tag "String that is added next to directory names in PLACE"
           :format "%t: %v\n%h\n"
           :doc "Useful when a related file is in a parallel file hierarchy.\nFor example, with a value of \"test\", the user could jump from\n\"/project/src/lisp/calendar/parse-time.el\" to\n\"/project/src/test/lisp/calendar/parse-time.el\" and back.\nThe directory must already exist."
-          (const :add-directory :tag "")
+          (const :add-directory)
           (string :tag "Directory name to add" :value "test"))
     (list :inline t
           :tag "Filler"
           :format "%t: %v\n"
-          (const :filler :tag "")
+          (const :filler)
           related-files-filler))))
 
 ;;;###autoload
