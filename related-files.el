@@ -367,13 +367,15 @@ recursively.  Only existing places are considered and returned.
 The returned value doesn't contain CURRENT-PLACE."
   (when current-place
     (let* ((places-result nil)
+           (places-tried nil)
            (places-queue (list current-place)))
       (while places-queue
         (when-let* ((place (pop places-queue))
                     ((file-exists-p place))
-                    ((not (seq-contains-p places-result place))))
+                    ((not (seq-contains-p places-tried place))))
           (unless (equal place current-place) (push place places-result))
           (let ((new-places (related-files--call-jumpers jumpers place)))
+            (push place places-tried)
             (setq places-queue (nconc places-queue new-places)))))
       places-result)))
 

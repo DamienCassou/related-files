@@ -83,6 +83,17 @@
                (related-files--collect-existing-places (list jumper1 jumper2) current-place)
                (list new-place))))))
 
+(ert-deftest related-files-test-collect-existing-places-avoids-calling-same-jumper-with-current-place-twice ()
+  "A jumper must only be called once per place."
+  (cl-letf (((symbol-function 'file-exists-p) #'identity))
+    (let* ((current-place "/bar")
+           (jumper1-arguments nil)
+           (jumper1 (lambda (place) (push place jumper1-arguments) (list current-place "/place"))))
+      (related-files--collect-existing-places (list jumper1) current-place)
+      (should (seq-set-equal-p
+               jumper1-arguments
+               (list current-place current-place "/place"))))))
+
 (ert-deftest related-files-test-collect-existing-places-returns-no-place-when-no-current-place ()
   "If there is no current place, there shouldn't be any destination place."
   (should-not (related-files--collect-existing-places '(jumper) nil)))
