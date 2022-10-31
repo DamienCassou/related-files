@@ -366,16 +366,16 @@ recursively.  Only existing places are considered and returned.
 
 The returned value doesn't contain CURRENT-PLACE."
   (when current-place
-    (let* ((places nil)
+    (let* ((places-result nil)
            (places-queue (list current-place)))
       (while places-queue
         (when-let* ((place (pop places-queue))
                     ((file-exists-p place))
-                    ((not (seq-contains-p places place))))
-          (unless (equal place current-place) (push place places))
+                    ((not (seq-contains-p places-result place))))
+          (unless (equal place current-place) (push place places-result))
           (let ((new-places (related-files--call-jumpers jumpers place)))
             (setq places-queue (nconc places-queue new-places)))))
-      places)))
+      places-result)))
 
 (defun related-files--collect-non-existing-places (jumpers current-place)
   "Return a list of places that can be accessed from CURRENT-PLACE with JUMPERS.
