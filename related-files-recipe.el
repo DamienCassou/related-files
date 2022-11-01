@@ -3,7 +3,7 @@
 ;; Copyright (C) 2022  Damien Cassou
 
 ;; Author: Damien Cassou <damien@cassou.me>
-;; Version: 0.1.0
+;; Version: 0.2.0
 ;; Package-Requires: ((emacs "28.2"))
 ;; Created: 25 Sep 2022
 ;; URL: https://www.gnu.org/software/emacs/
