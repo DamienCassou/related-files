@@ -328,6 +328,15 @@ use the filler to populate the new file with initial content."
   "Fill the current buffer by calling `auto-insert'."
   (auto-insert))
 
+(declare-function yas-expand-snippet "ext:yasnippet.el")
+(declare-function yas-lookup-snippet "ext:yasnippet.el")
+
+(cl-defmethod related-files-fill ((filler (head yasnippet)) &allow-other-keys &rest)
+  "Fill the current buffer with yasnippet-based FILLER."
+  (when-let* (((require 'yasnippet nil t))
+              (snippet (map-elt (cdr filler) :name)))
+    (yas-expand-snippet (yas-lookup-snippet snippet major-mode))))
+
 
 ;;; Utility Functions
 
