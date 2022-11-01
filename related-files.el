@@ -94,6 +94,7 @@
 
 (require 'subr-x)
 (require 'cl-lib)
+(require 'map)
 
 
 ;;; Customization Options
