@@ -48,6 +48,15 @@
     (should (equal (related-files-apply jumperIdentity "/foo/bar") "/foo/bar"))
     (should (equal (related-files-apply jumperConst "/foo/bar") place))))
 
+(defun related-files-test-jumper-with-filler (_)
+  "A jumper returning a constant place."
+  "new-place")
+
+(ert-deftest related-files-test-get-filler ()
+  (let ((filler "my filler"))
+    (put #'related-files-test-jumper-with-filler 'related-files-filler filler)
+    (should (equal (related-files-get-filler #'related-files-test-jumper-with-filler) filler))))
+
 
 ;;; Functions Manipulating Places
 

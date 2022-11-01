@@ -259,10 +259,8 @@ list of places."
   (funcall jumper place))
 
 (cl-defgeneric related-files-get-filler (jumper)
-  "Return a filler associated with JUMPER.
-
-There is no filler associated to a function-based jumper but
-other kinds of jumpers may be able to specify a filler.")
+  "Return a filler associated with JUMPER."
+  (get jumper 'related-files-filler))
 
 
 ;;; Filler Public API
