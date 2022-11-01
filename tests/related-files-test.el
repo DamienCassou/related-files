@@ -3,7 +3,7 @@
 ;; Copyright (C) 2022  Damien Cassou
 
 ;; Author: Damien Cassou <damien@cassou.me>
-;; Version: 0.1.0
+;; Version: 0.2.0
 ;; Package-Requires: ((emacs "28.2"))
 ;; Created: 25 Sep 2022
 ;; URL: https://www.gnu.org/software/emacs/
@@ -48,6 +48,15 @@
     (should (equal (related-files-apply jumperIdentity "/foo/bar") "/foo/bar"))
     (should (equal (related-files-apply jumperConst "/foo/bar") place))))
 
+(defun related-files-test-jumper-with-filler (_)
+  "A jumper returning a constant place."
+  "new-place")
+
+(ert-deftest related-files-test-get-filler ()
+  (let ((filler "my filler"))
+    (put #'related-files-test-jumper-with-filler 'related-files-filler filler)
+    (should (equal (related-files-get-filler #'related-files-test-jumper-with-filler) filler))))
+
 
 ;;; Functions Manipulating Places
 
@@ -82,6 +91,17 @@
       (should (seq-set-equal-p
                (related-files--collect-existing-places (list jumper1 jumper2) current-place)
                (list new-place))))))
+
+(ert-deftest related-files-test-collect-existing-places-avoids-calling-same-jumper-with-current-place-twice ()
+  "A jumper must only be called once per place."
+  (cl-letf (((symbol-function 'file-exists-p) #'identity))
+    (let* ((current-place "/bar")
+           (jumper1-arguments nil)
+           (jumper1 (lambda (place) (push place jumper1-arguments) (list current-place "/place"))))
+      (related-files--collect-existing-places (list jumper1) current-place)
+      (should (seq-set-equal-p
+               jumper1-arguments
+               (list current-place current-place "/place"))))))
 
 (ert-deftest related-files-test-collect-existing-places-returns-no-place-when-no-current-place ()
   "If there is no current place, there shouldn't be any destination place."

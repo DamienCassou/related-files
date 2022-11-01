@@ -3,7 +3,7 @@
 ;; Copyright (C) 2022  Damien Cassou
 
 ;; Author: Damien Cassou <damien@cassou.me>
-;; Version: 0.1.0
+;; Version: 0.2.0
 ;; Package-Requires: ((emacs "28.2"))
 ;; Created: 25 Sep 2022
 ;; URL: https://www.gnu.org/software/emacs/
@@ -259,10 +259,8 @@ list of places."
   (funcall jumper place))
 
 (cl-defgeneric related-files-get-filler (jumper)
-  "Return a filler associated with JUMPER.
-
-There is no filler associated to a function-based jumper but
-other kinds of jumpers may be able to specify a filler.")
+  "Return a filler associated with JUMPER."
+  (get jumper 'related-files-filler))
 
 
 ;;; Filler Public API
@@ -330,6 +328,15 @@ use the filler to populate the new file with initial content."
   "Fill the current buffer by calling `auto-insert'."
   (auto-insert))
 
+(declare-function yas-expand-snippet "ext:yasnippet.el")
+(declare-function yas-lookup-snippet "ext:yasnippet.el")
+
+(cl-defmethod related-files-fill ((filler (head yasnippet)) &allow-other-keys &rest)
+  "Fill the current buffer with yasnippet-based FILLER."
+  (when-let* (((require 'yasnippet nil t))
+              (snippet (map-elt (cdr filler) :name)))
+    (yas-expand-snippet (yas-lookup-snippet snippet major-mode))))
+
 
 ;;; Utility Functions
 
@@ -366,16 +373,18 @@ recursively.  Only existing places are considered and returned.
 
 The returned value doesn't contain CURRENT-PLACE."
   (when current-place
-    (let* ((places nil)
+    (let* ((places-result nil)
+           (places-tried nil)
            (places-queue (list current-place)))
       (while places-queue
         (when-let* ((place (pop places-queue))
                     ((file-exists-p place))
-                    ((not (seq-contains-p places place))))
-          (unless (equal place current-place) (push place places))
+                    ((not (seq-contains-p places-tried place))))
+          (unless (equal place current-place) (push place places-result))
           (let ((new-places (related-files--call-jumpers jumpers place)))
+            (push place places-tried)
             (setq places-queue (nconc places-queue new-places)))))
-      places)))
+      places-result)))
 
 (defun related-files--collect-non-existing-places (jumpers current-place)
   "Return a list of places that can be accessed from CURRENT-PLACE with JUMPERS.

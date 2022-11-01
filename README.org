@@ -1,0 +1,370 @@
+#+title:                 related-files
+#+author:                Damien Cassou
+#+email:                 damien@cassou.me
+#+language:              en
+#+options:               ':t toc:nil author:t email:t num:t
+#+startup:               content
+#+export_file_name:      related-files.texi
+#+texinfo_filename:      related-files.info
+#+texinfo_dir_category:  Emacs misc features
+#+texinfo_dir_title:     related-files.el: (related-files)
+#+texinfo_dir_desc:      Easily find files related to the current one
+#+texinfo_header:        @set MAINTAINER Damien Cassou
+#+texinfo_header:        @set MAINTAINEREMAIL @email{damien@cassou.me}
+#+texinfo_header:        @set MAINTAINERCONTACT @uref{mailto:damien@cassou.me,contact the maintainer}
+
+#+toc: headlines 8 insert TOC here, with eight headline levels
+
+#+BEGIN_HTML
+<p>
+  <a href="https://stable.melpa.org/#/related-files">
+    <img alt="MELPA Stable" src="https://stable.melpa.org/packages/related-files-badge.svg"/>
+  </a>
+
+  <a href="https://melpa.org/#/related-files">
+    <img alt="MELPA" src="https://melpa.org/packages/related-files-badge.svg"/>
+  </a>
+
+  <a href="https://github.com/DamienCassou/related-files/actions">
+    <img alt="pipeline status" src="https://github.com/DamienCassou/related-files/actions/workflows/test.yml/badge.svg" />
+  </a>
+</p>
+#+END_HTML
+
+
+Thousands times a day you want to jump from a file to its test file
+(or to its CSS file, or to its header file, or any other related file)
+and just as many times you want to go back to the initial file.
+Jumping to related files is what this package is about.
+
+* Overview
+
+How does a user specify that a file is related to a set of other
+files? One way is to create a function that takes a file as argument
+and returns a list of related filenames:
+
+#+begin_src emacs-lisp
+  (defun my/related-files-jumper (file)
+    (let ((without-ext (file-name-sans-extension file)))
+      (list
+       (concat without-ext ".js")
+       (concat without-ext ".css"))))
+
+  (setq related-files-jumpers (list #'my/related-files-jumper))
+#+end_src
+
+The function ~my/related-files-jumper~ is called a /jumper/.  With
+this setup, the command ~M-x related-files-jump~ (that you may want to
+bind, for example to ~C-x j~) will let the user jump from ~Foo.js~ to
+~Foo.css~ and back.
+
+This is working good but has several limitations:
+
+1. If ~Foo.css~ is not in the same directory as ~Foo.js~ or if you
+   want to include test files which end with "-tests.js",
+   ~my/related-files-jumper~ has to be modified in a non-obvious way
+   or a complicated new jumper must be written and added to
+   ~related-files-jumpers~;
+
+2. The function ~my/related-files-jumper~ has to be shared with all
+   Emacs users working on the same project.
+
+So related-files recommends another approach that is less powerful but
+much simpler.  Here is another way to define the same jumper:
+
+#+begin_src emacs-lisp
+  (setq related-files-jumpers
+        '((recipe :remove-suffix ".js" :add-suffix ".css")))
+#+end_src
+
+This jumper lets the user go from ~Foo.js~ to ~Foo.css~.  The package
+will automatically inverse the meaning of ~:remove-suffix~ and
+~:add-suffix~ arguments so the user can also go from ~Foo.css~ to
+~Foo.js~ with this jumper ([[#Recipe-based jumpers]] for more information).
+
+This kind of jumper can easily be shared with the members of a team
+through a ~.dir-locals.el~ file ([[info:emacs#Directory Variables]]).
+
+Emacs-lisp developers can easily implement new kinds of jumpers beyond
+function-based and recipe-based ones ([[#Implementing new kinds of
+jumpers]]).
+
+The command ~M-x related-files-make~ makes it easy to create a related
+file if it doesn't exist yet. It is also possible to fill newly
+created files with content.  If the content is always the same, a
+string can be used to specify it:
+
+#+begin_src emacs-lisp
+  (recipe :remove-suffix ".js"
+          :add-suffix ".css"
+          :filler ".my-class {}")
+#+end_src
+
+There are also ~auto-insert~-based and [[https://github.com/joaotavora/yasnippet][yasnippet]]-based ways to fill
+new files ([[#Specifying fillers]]). New kinds of fillers can easily be
+implemented ([[#Implementing new kinds of fillers]]).
+
+The command ~M-x related-files-jump-or-make~ shows you a list of
+existing and non-existing related files. Choosing an existing one will
+open it while choosing an existing one will first create (and possibly
+fill it) then jump to it.
+
+* Installation
+
+The simplest way to install ~related-files~ is through [[https://melpa.org/][MELPA]]. Then,
+you should require the package and bind some of the provided commands,
+e.g.,
+
+#+begin_src emacs-lisp
+  (require 'related-files)
+  (global-set-key (kbd "C-x j") #'related-files-jump)
+  (global-set-key (kbd "C-x J") #'related-files-make)
+  ;; you may also bind `related-files-jump-or-make'
+
+  ;; If you want the recipe-based syntax (recommended):
+  (require 'related-files-recipe)
+#+end_src
+
+If you are a user of [[https://github.com/jwiegley/use-package][use-package]], the configuration will look like
+this instead:
+
+#+begin_src emacs-lisp
+  (use-package related-files
+    :bind (("C-x j" . related-files-jump)
+           ;; you may also bind `related-files-jump-or-make'
+           ("C-x J" . related-files-make)))
+
+  ;; If you want the recipe-based syntax (recommended):
+  (use-package related-files-recipe
+    :demand t
+    :after related-files)
+#+end_src
+
+* Specifying jumpers
+:PROPERTIES:
+:CUSTOM_ID: Specifying jumpers
+:END:
+
+Before being able to use related-files, you have to specify how your
+files relate to each other. There are two builtin ways to do that and
+more ways can be implemented ([[#Implementing new kinds of
+jumpers]]). Whatever way you choose, you should probably start with the
+customize interface: ~M-x customize-variable RET
+related-files-jumpers~. This interface will guide you with all the
+possibilities and show you related documentation.
+
+The two builtin ways to define jumpers are recipes ([[#Recipe-based
+jumpers]]) and functions ([[#Function-based jumpers]]). Whatever way you
+choose, you have to put your jumpers in the ~related-files-jumpers~
+variable.
+
+** Recipe-based jumpers
+:PROPERTIES:
+:CUSTOM_ID: Recipe-based jumpers
+:END:
+
+The simplest way to define a jumper is to use the recipe-based syntax.
+
+Such a jumper defines transformations to apply to the current file
+name to get related file names.
+
+For example, in a typical C project, ~.c~ and ~.h~ files are in the
+same directory and a jumper could be defined as:
+
+#+begin_src emacs-lisp
+  (recipe :remove-suffix ".c" :add-suffix ".h")
+#+end_src
+
+This is enough for the user to go from ~file.c~ to ~file.h~. The
+package will automatically inverse the meaning of ~:remove-suffix~ and
+~:add-suffix~ arguments so the user can also go from ~file.h~ to
+~file.c~ with this jumper.
+
+Sometimes, related files are located in parallel hierarchies. For
+example, a typical Emacs-lisp project would need this jumper:
+
+#+begin_src emacs-lisp
+  (recipe
+   :remove-suffix ".el"
+   :add-suffix "-tests.el"
+   :add-directory "test")
+#+end_src
+
+With this jumper the user could jump from
+"/project/src/lisp/calendar/parse-time.el"
+"/project/src/test/lisp/calendar/parse-time-tests.el" and back. How
+does the jumper know that you want related files "/src/test/lisp" and
+not "/src/lisp/test" or "/test/src/lisp"? The jumper ignores
+non-existing directories.
+
+Related files may use different case, e.g., "Company.js" (capitalized
+"c") and "company-tests.js" (un-capitalized "c"). In case-sensitive
+file systems, the recipe must specify how case is transformed:
+
+#+begin_src emacs-lisp
+  (recipe
+   :remove-suffix ".js"
+   :add-suffix "-tests.js"
+   :case-transformer uncapitalize)
+#+end_src
+
+Here is the general form of these recipe-based jumpers:
+
+#+begin_src emacs-lisp
+  (recipe
+   [:remove-suffix REMOVE-SUFFIX]
+   [:add-suffix ADD-SUFFIX]
+   [:add-directory ADD-DIRECTORY]
+   [:case-transformer TRANSFORMATION]
+   [:filler FILLER])
+#+end_src
+
+All five fields are optional but the first two should usually be there
+unless related files differ only by their directory or
+case. Modifications to the current filename to build the related one
+are applied in the order below:
+
+- ~:remove-suffix~ :: a string (e.g., ".el") that the current
+  filename should end with and that is going to be removed from it;
+- ~:add-suffix~ :: a string (e.g., "-tests.el") that will be added
+  at the end;
+- ~:case-transformer~ :: either ~capitalize~ or ~uncapitalize~ to
+  change the case of the filename;
+- ~:add-directory~ ::  a string (e.g., "test") that is added next to
+  each directory name in the current filename (only existing
+  directories are taken into account).
+
+The ~:filler~ keyword specifies how to populate a related file when it
+doesn't exist yet ([[#Specifying fillers]]).
+
+** Function-based jumpers
+:PROPERTIES:
+:CUSTOM_ID: Function-based jumpers
+:END:
+
+When recipe-based jumpers are not powerful enough for you, you can
+always use functions.  A jumper can be a function accepting the
+current place as argument (a filename) and returning a
+(possibly-empty) list of (existing and non-existing) places the user
+might want to go to or create.  Instead of returning a list, the
+jumper may also just return a place.
+
+Here is an example function-based jumper definition:
+
+#+begin_src emacs-lisp
+  (defun my/related-files-jumper (file)
+    (let ((without-ext (file-name-sans-extension file)))
+      (list
+       (concat without-ext ".js")
+       (concat without-ext ".css"))))
+
+  (setq related-files-jumpers (list #'my/related-files-jumper))
+#+end_src
+
+This jumper lets the user jump from ~Foo.js~ to ~Foo.css~ and back.
+
+A filler can be associated to a function-based jumper by specifying
+the filler in the ~related-files-filler~ property of the function
+([[#Specifying fillers]]):
+
+#+begin_src emacs-lisp
+  (put #'my/related-files-jumper 'related-files-filler filler)
+#+end_src
+
+Recipe-based jumpers and function-based jumpers are the two builtin
+ways to create jumpers but you may implement new kinds of jumpers
+([[#Implementing new kinds of jumpers]]).
+
+* Specifying fillers
+:PROPERTIES:
+:CUSTOM_ID: Specifying fillers
+:END:
+
+A /filler/ is a way to populate a related file when
+~related-files-make~ or ~related-files-jump-or-make~ create one. A
+jumper is responsible for declaring how to fill the files it creates.
+
+Each kind of jumper has its own way to declare the associated
+filler. For example, a recipe-based jumper needs a ~:filler~ keyword
+while a function-based one needs a ~related-files-filler~
+property. Nevertheless, the kinds of supported fillers are the same
+regardless of the kind of jumper being defined. The remaining of this
+section describes the builtin kinds of fillers. An Emacs-lisp
+developer can easily implement more kinds ([[#Implementing new kinds of
+fillers]]).
+
+** String-based fillers
+
+If new files need the same content, a filler can be specified as a
+plain string, e.g.,
+
+#+begin_src emacs-lisp
+  (recipe
+   :remove-suffix ".js"
+   :add-suffix ".css"
+   :filler ".my-class {}")
+#+end_src
+
+** Auto-insert-based fillers
+
+If new files are compatible with ~M-x auto-insert~, a filler can be
+just the symbol ~auto-insert~:
+
+#+begin_src emacs-lisp
+  (recipe
+   :remove-suffix ".el"
+   :add-suffix "-tests.el"
+   :filler auto-insert)
+#+end_src
+
+As soon as the user creates a new related-file from this jumper, the
+~auto-insert~ function will be called.
+
+** Yasnippet-based fillers
+
+If you use [[https://github.com/joaotavora/yasnippet][yasnippet]], you can also specify a yasnippet-based filler in
+your jumper:
+
+#+begin_src emacs-lisp
+  (recipe
+   :remove-suffix ".js"
+   :add-suffix ".stories.js"
+   :filler (yasnippet :name "stories"))
+#+end_src
+
+As soon as the user creates a new related-file from this jumper, the
+"stories" snippet will be inserted.
+
+* Extending related-files
+
+The previous section described the builtin kinds of jumpers and
+fillers. With a bit of Emacs-lisp knowledge, you can add new kinds of
+jumpers and fillers.
+
+** Implementing new kinds of jumpers
+:PROPERTIES:
+:CUSTOM_ID: Implementing new kinds of jumpers
+:END:
+
+If you want to add a new kind of jumper, follow the steps below. You
+can use ~related-files-recipe.el~ as example.
+
+1. override ~related-files-apply~;
+2. optionally override ~related-files-get-filler~ if your new kind of
+   jumper should support fillers;
+3. optionally call ~related-files-add-jumper-type~ to specify a
+   customization UI;
+4. optionally add a function to
+   ~related-files-jumper-safety-functions~ to indicate if jumpers are
+   safe or unsafe to use (jumpers are considered unsafe by default).
+
+** Implementing new kinds of fillers
+:PROPERTIES:
+:CUSTOM_ID: Implementing new kinds of fillers
+:END:
+
+If you want to add a new kind of filler, follow the steps below. You
+can use the existing fillers in ~related-files.el~ as example.
+
+1. override ~related-files-fill~;
+2. optionally call ~related-files-add-filler-type~ to specify a customization UI.
