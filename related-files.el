@@ -429,7 +429,17 @@ user."
      for entity in entities
      for entity-string in entity-strings
      do (puthash entity-string entity entity-string-to-entity))
-    (when-let* ((entity-string (completing-read prompt entity-strings nil t)))
+    (when-let* ((entity-table (lambda (str pred flag)
+				(pcase flag
+				  ('nil (try-completion str entity-strings pred))
+				  ('t (all-completions str entity-strings pred))
+				  ('lambda (test-completion str entity-strings pred))
+				  ((and (pred consp)
+					(app car 'boundaries))
+				   `(boundaries 0 . ,(length (cdr flag))))
+				  ('metadata
+				   `(metadata (category . file))))))
+		(entity-string (completing-read prompt entity-table nil t)))
       (gethash entity-string entity-string-to-entity))))
 
 (defun related-files-add-jumper-type (customization-type)
