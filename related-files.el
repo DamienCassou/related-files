@@ -353,7 +353,7 @@ INITIAL-DIRECTORY is used to format PLACE relatively.
 If PLACE doesn't exist, append \"(create it!)\" to the return
 value."
   (when-let* ((relative-name (file-relative-name place initial-directory)))
-    (if (file-exists-p place)
+    (if (related-files-place-exists-p place)
         relative-name
       (format "%s (create it!)" relative-name))))
 
