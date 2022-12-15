@@ -332,8 +332,8 @@ related-files.  It is used to format each place in PLACES."
 
 (defun related-files--act-on-place (place)
   "Either open or create PLACE, a filename."
-  (if (file-exists-p place)
-      (find-file place)
+  (if (related-files-place-exists-p place)
+      (related-files-goto-place place)
     (related-files--make-place place)))
 
 (defun related-files--format-place (initial-directory place)
