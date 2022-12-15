@@ -159,6 +159,18 @@ MANUAL (TODO)."
   :type '(repeat :tag "Jumpers" related-files-jumper)
   :safe (lambda (jumpers) (seq-every-p (lambda (jumper) (eq 'safe (run-hook-with-args-until-success 'related-files-jumper-safety-functions jumper))) jumpers)))
 
+;;;###autoload
+(defcustom related-files-current-place-finders '(buffer-file-name
+						 current-buffer)
+  "List of functions returning the current place.
+
+Each function should return the current place in a different
+form, or nil if called in circumstances such that the format does
+not apply (i.e. the function `buffer-file-name' returns nil when
+the current buffer is not associated with a file)."
+  :group 'related-files
+  :type '(repeat function))
+
 
 ;;; Public Functions
 
