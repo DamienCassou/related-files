@@ -467,9 +467,7 @@ returned value doesn't contain any places in CURRENT-PLACES."
 
 Each item of the return value remembers it was created with
 JUMPER."
-  (mapcar
-   (lambda (place) (propertize place :related-files-jumper jumper))
-   places))
+  (mapcar (apply-partially #'related-files-attach-jumper-to-place jumper) places))
 
 (defun related-files--completing-read (prompt entities formatter)
   "Display PROMPT and let the user choose one of ENTITIES in the minibuffer.
