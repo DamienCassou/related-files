@@ -175,8 +175,8 @@ the current buffer is not associated with a file)."
 ;;; Public Functions
 
 ;;;###autoload
-(defun related-files-jump (&optional jumpers current-place)
-  "Let the user choose where to go from CURRENT-PLACE by asking JUMPERS.
+(defun related-files-jump (&optional jumpers current-places)
+  "Let the user choose where to go from the current place by asking JUMPERS.
 
 Each element of JUMPERS is asked for a list of candidates and the
 resulting lists are concatenated with duplicates removed.  The
@@ -187,22 +187,23 @@ candidates.  If the resulting list contains only one item, this
 item is automatically selected.
 
 Only existing files are presented to the user.  Look at
-`related-files-make' and `related-files-jump-or-make' if you also want to be
-able to create new files.
+`related-files-make' and `related-files-jump-or-make' if you also
+want to be able to create new files.
 
 If JUMPERS is not provided, use `related-files-jumpers'.  If
-CURRENT-PLACE is not provided, use the function
-`buffer-file-name'.
+CURRENT-PLACES is not provided, try different places from
+`related-files-current-place-finders'.
 
 Interactively, a numeric prefix argument selects the jumper at
 the specified position (zero-based index) in `related-files-jumpers'."
   (interactive (list (when (numberp current-prefix-arg)
                        (list (seq-elt related-files-jumpers current-prefix-arg)))))
-  (related-files--jump-or-make jumpers current-place :include-existing-places t))
+  
+  (related-files--jump-or-make jumpers current-places :include-existing-places t))
 
 ;;;###autoload
-(defun related-files-make (&optional jumpers current-place)
-  "Let the user choose where to go from CURRENT-PLACE by asking JUMPERS.
+(defun related-files-make (&optional jumpers current-places)
+  "Let the user choose where to go from the current place by asking JUMPERS.
 
 Each element of JUMPERS is asked for a list of candidates and the
 resulting lists are concatenated with duplicates removed.  The
@@ -219,18 +220,18 @@ current file for example.  Look at `related-files-jump' and
 existing files.
 
 If JUMPERS is not provided, use `related-files-jumpers'.  If
-CURRENT-PLACE is not provided, use the function
-`buffer-file-name'.
+CURRENT-PLACES is not provided, use
+`related-files-current-place-finders'.
 
 Interactively, a numeric prefix argument selects the jumper at
 the specified position (zero-based index) in `related-files-jumpers'."
   (interactive (list (when (numberp current-prefix-arg)
                        (list (seq-elt related-files-jumpers current-prefix-arg)))))
-  (related-files--jump-or-make jumpers current-place :include-non-existing-places t))
+  (related-files--jump-or-make jumpers current-places :include-non-existing-places t))
 
 ;;;###autoload
-(defun related-files-jump-or-make (&optional jumpers current-place)
-  "Let the user choose where to go from CURRENT-PLACE by asking JUMPERS.
+(defun related-files-jump-or-make (&optional jumpers current-places)
+  "Let the user choose where to go from the current place by asking JUMPERS.
 
 Each element of JUMPERS is asked for a list of candidates and the
 resulting lists are concatenated with duplicates removed.  The
@@ -246,14 +247,14 @@ ones.  Look at `related-files-jump' and `related-files-make' if you don't
 want to mix existing and non-existing files in the same list..
 
 If JUMPERS is not provided, use `related-files-jumpers'.  If
-CURRENT-PLACE is not provided, use the function
-`buffer-file-name'.
+CURRENT-PLACES is not provided, use
+`related-files-current-place-finders'.
 
 Interactively, a numeric prefix argument selects the jumper at
 the specified position (zero-based index) in `related-files-jumpers'."
   (interactive (list (when (numberp current-prefix-arg)
                        (list (seq-elt related-files-jumpers current-prefix-arg)))))
-  (related-files--jump-or-make jumpers current-place
+  (related-files--jump-or-make jumpers current-places
                          :include-existing-places t
                          :include-non-existing-places t))
 
