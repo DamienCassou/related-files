@@ -409,7 +409,7 @@ The returned value doesn't contain CURRENT-PLACE."
            (places-queue (copy-sequence current-places)))
       (while places-queue
         (when-let* ((place (pop places-queue))
-                    ((file-exists-p place))
+		    ((related-files-place-exists-p place))
                     ((not (seq-contains-p places-tried place))))
           (unless (member place current-places) (push place places-result))
           (let ((new-places (related-files--call-jumpers jumpers `(,place))))
