@@ -296,6 +296,15 @@ The default implementation assumes PLACE is a filename."
   "Call `switch-to-buffer'."
   (switch-to-buffer place))
 
+(cl-defgeneric related-files-attach-jumper-to-place (jumper place)
+  "Attach JUMPER to PLACE.
+
+Return the modified version of PLACE.
+
+The default implementation assumes PLACE is a filename, and gives
+it a property :related-files-jumper, with JUMPER as its value."
+  (propertize place :related-files-jumper jumper))
+
 
 ;;; Filler Public API
 
