@@ -424,7 +424,7 @@ Only non-existing places are considered and returned.  The
 returned value doesn't contain any places in CURRENT-PLACES."
   (cl-delete-if
    (lambda (place) (or (member place current-places)
-                       (file-exists-p place)))
+                       (related-files-place-exists-p place)))
    (related-files--call-jumpers jumpers current-places)))
 
 (defun related-files--call-jumpers (jumpers places)
