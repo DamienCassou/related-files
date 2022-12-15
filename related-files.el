@@ -286,6 +286,12 @@ The default implementation assumes PLACE is a filename."
   "Call `buffer-live-p'."
   (buffer-live-p place))
 
+(cl-defgeneric related-files-goto-place (place)
+  "Go to an existing PLACE.
+
+The default implementation assumes PLACE is a filename."
+  (find-file place))
+
 
 ;;; Filler Public API
 
