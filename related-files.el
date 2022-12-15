@@ -292,6 +292,10 @@ The default implementation assumes PLACE is a filename."
 The default implementation assumes PLACE is a filename."
   (find-file place))
 
+(cl-defmethod related-files-goto-place ((place buffer))
+  "Call `switch-to-buffer'."
+  (switch-to-buffer place))
+
 
 ;;; Filler Public API
 
