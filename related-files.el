@@ -282,6 +282,10 @@ list of places."
 The default implementation assumes PLACE is a filename."
   (file-exists-p place))
 
+(cl-defmethod related-files-place-exists-p ((place buffer))
+  "Call `buffer-live-p'."
+  (buffer-live-p place))
+
 
 ;;; Filler Public API
 
