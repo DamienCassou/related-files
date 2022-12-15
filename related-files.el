@@ -289,6 +289,13 @@ Beyond the filler, this function is called with the :jumper and
 
 ;;; Functions Manipulating Places
 
+(defun related-files--get-current-places ()
+  "Return a list of different forms of the current place."
+  (delete-dups
+   (seq-remove
+    #'null
+    (mapcar #'funcall related-files-current-place-finders))))
+
 (defun related-files--choose-place (places initial-place)
   "Let the user pick one of PLACES and return it.
 
