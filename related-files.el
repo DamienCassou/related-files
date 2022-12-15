@@ -276,6 +276,12 @@ list of places."
   "Return a filler associated with JUMPER."
   (get jumper 'related-files-filler))
 
+(cl-defgeneric related-files-place-exists-p (place)
+  "Return non-nil if PLACE exists.
+
+The default implementation assumes PLACE is a filename."
+  (file-exists-p place))
+
 
 ;;; Filler Public API
 
