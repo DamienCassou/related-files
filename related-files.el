@@ -259,7 +259,7 @@ the specified position (zero-based index) in `related-files-jumpers'."
                          :include-non-existing-places t))
 
 
-;;; Jumpers Public API
+;;; Jumpers and Places Public API
 
 (cl-defgeneric related-files-apply (jumper place)
   "Apply JUMPER to PLACE and return related places or nil.
