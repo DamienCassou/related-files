@@ -355,17 +355,20 @@ related-files.  It is used to format each place in PLACES."
       (related-files-goto-place place)
     (related-files--make-place place)))
 
-(defun related-files--format-place (initial-directory place)
+(defun related-files--format-place (initial-places place)
   "Return a string representing PLACE.
 
-INITIAL-DIRECTORY is used to format PLACE relatively.
+INITIAL-PLACES is a list different objects, each representing the
+initial place in a different way (e.g. a filename, a buffer
+object, etc.). It is used to format PLACE relatively.
 
-If PLACE doesn't exist, append \"(create it!)\" to the return
-value."
-  (when-let* ((relative-name (file-relative-name place initial-directory)))
+If PLACE doesn't exist (as determined by
+`related-files-place-exists-p'), append \"(create it!)\" to the
+return value."
+  (when-let* ((name (related-files-format-place initial-places place)))
     (if (related-files-place-exists-p place)
-        relative-name
-      (format "%s (create it!)" relative-name))))
+        name
+      (format "%s (create it!)" name))))
 
 (defun related-files--make-place (place)
   "Create the file at PLACE.
