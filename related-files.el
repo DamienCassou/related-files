@@ -305,6 +305,16 @@ The default implementation assumes PLACE is a filename, and gives
 it a property :related-files-jumper, with JUMPER as its value."
   (propertize place :related-files-jumper jumper))
 
+(cl-defgeneric related-files-format-place (initial-places place)
+  "Format PLACE, relative to INITIAL-PLACES.
+
+The default implementation assumes that PLACE is a filename, and
+looks for a string in INITIAL-PLACES, which represents the
+current file."
+  (let* ((initial-file (seq-find #'stringp initial-places))
+	 (initial-directory (file-name-directory initial-file)))
+   (file-relative-name place initial-directory)))
+
 
 ;;; Filler Public API
 
