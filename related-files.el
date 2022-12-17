@@ -267,10 +267,11 @@ the specified position (zero-based index) in `related-files-jumpers'."
 PLACE is a filename and the result must be a possibly-empty list
 of filenames.
 
-The default implementation allows JUMPER to be a function.  The
-function can return either a single place or a possibly-empty
-list of places."
-  (funcall jumper place))
+The generic implementation just returns nil. This ensures that
+calling a jumper/place pair for which there is no appropriately
+typed method does not break anything -- it just doesn't return
+any places."
+  nil)
 
 (cl-defgeneric related-files-get-filler (jumper)
   "Return a filler associated with JUMPER."
