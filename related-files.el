@@ -336,18 +336,18 @@ Beyond the filler, this function is called with the :jumper and
     #'null
     (mapcar #'funcall related-files-current-place-finders))))
 
-(defun related-files--choose-place (places initial-place)
+(defun related-files--choose-place (places initial-places)
   "Let the user pick one of PLACES and return it.
 
-PLACES is a list of filenames and INITIAL-PLACE is a filename.
+PLACES is a list of filenames and INITIAL-PLACES is a list of
+places.
 
 INITIAL-PLACE is the place that was current when the user started
 related-files.  It is used to format each place in PLACES."
   (cond
    ((length= places 0) (user-error "No place to go to.  Consider configuring `related-files-jumpers' or using `related-files-make'") nil)
    ((length= places 1) (car places))
-   (t (let ((initial-directory (file-name-directory initial-place)))
-        (related-files--completing-read "Place: " places (apply-partially #'related-files--format-place initial-directory))))))
+   (t (related-files--completing-read "Place: " places (apply-partially #'related-files--format-place initial-places)))))
 
 (defun related-files--act-on-place (place)
   "Either open or create PLACE, a filename."
