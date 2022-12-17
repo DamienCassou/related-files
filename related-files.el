@@ -273,6 +273,10 @@ typed method does not break anything -- it just doesn't return
 any places."
   nil)
 
+(cl-defmethod related-files-apply ((jumper symbol) place)
+"Call JUMPER on PLACE."
+  (funcall jumper place))
+
 (cl-defgeneric related-files-get-filler (jumper)
   "Return a filler associated with JUMPER."
   (get jumper 'related-files-filler))
