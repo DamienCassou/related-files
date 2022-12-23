@@ -360,6 +360,18 @@ related-files.  It is used to format each place in PLACES."
       (related-files-goto-place place)
     (related-files--make-place place)))
 
+(defcustom related-files-place-category-tests
+  '(((pred stringp) 'file)
+    ((pred bufferp) 'buffer))
+  "List of tests for getting type of a place.
+
+This variable is passed as an argument list to `pcase', so must
+take the relevant form. The return value of each clause must be a
+symbol for a category. See info node `(elisp)Programmed
+Completion' for more information."
+  ;; TODO pcase arg list type? (for :type)
+  :group 'related-files)
+
 (defun related-files--format-place (initial-places place)
   "Return a string representing PLACE.
 
