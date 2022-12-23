@@ -372,6 +372,16 @@ Completion' for more information."
   ;; TODO pcase arg list type? (for :type)
   :group 'related-files)
 
+(defmacro related-files--get-place-category (place)
+  "Get completion category for PLACE.
+
+Use `pcase' to check PLACE against the patterns in
+`related-files-place-category-tests'. If none succeed, return
+`type-of' PLACE."
+  `(pcase ,place
+     ,@related-files-place-category-tests
+     (t (type-of ,place))))
+
 (defun related-files--format-place (initial-places place)
   "Return a string representing PLACE.
 
