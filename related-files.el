@@ -512,10 +512,18 @@ JUMPER."
 (defun related-files--completing-read (prompt entities formatter)
   "Display PROMPT and let the user choose one of ENTITIES in the minibuffer.
 
-Format each entity with FORMATTER before presenting it to the
-user."
+Before being presented to the user, each entity is formatted with
+FORMATTER, then the result has a property 'multi-category
+attached. The value of this property is a cons cell: its car is
+the catefory of the entity (as determined by
+`related-files--get-place-category') and its cdr is the formatted
+string. "
   (let* ((entity-string-to-entity (make-hash-table :test 'equal :size (length entities)))
-         (entity-strings (mapcar formatter entities)))
+	 (format-function
+	  (lambda (entity) (let ((str (funcall formatter entity))
+			    (cat (related-files--get-place-category entity)))
+			(propertize str 'multi-category `(,cat . ,str)))))
+         (entity-strings (mapcar format-function entities)))
     (cl-loop
      for entity in entities
      for entity-string in entity-strings
@@ -529,7 +537,7 @@ user."
 					(app car 'boundaries))
 				   `(boundaries 0 . ,(length (cdr flag))))
 				  ('metadata
-				   `(metadata (category . file))))))
+				   `(metadata (category . multi-category))))))
 		(entity-string (completing-read prompt entity-table nil t)))
       (gethash entity-string entity-string-to-entity))))
 
