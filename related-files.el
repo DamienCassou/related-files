@@ -310,8 +310,13 @@ The default implementation assumes PLACE is a filename, and gives
 it a property :related-files-jumper, with JUMPER as its value."
   (propertize place :related-files-jumper jumper))
 
-(cl-defgeneric related-files-format-place (initial-places place)
+(cl-defgeneric related-files-format-place (initial-places place &optional annotate)
   "Format PLACE, relative to INITIAL-PLACES.
+
+If ANNOTATE is non-nil, it is ok for this function to return an
+'annotated' or 'decorated' version of PLACE (with extra
+information). If ANNOTATE is nil,a 'bare' version must be
+returned.
 
 The default implementation assumes that PLACE is a filename, and
 looks for a string in INITIAL-PLACES, which represents the
