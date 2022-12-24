@@ -387,7 +387,7 @@ Use `pcase' to check PLACE against the patterns in
      ,@related-files-place-category-tests
      (t (type-of ,place))))
 
-(defun related-files--format-place (initial-places place)
+(defun related-files--format-place (initial-places place &optional annotate)
   "Return a string representing PLACE.
 
 INITIAL-PLACES is a list different objects, each representing the
@@ -397,8 +397,8 @@ object, etc.). It is used to format PLACE relatively.
 If PLACE doesn't exist (as determined by
 `related-files-place-exists-p'), append \"(create it!)\" to the
 return value."
-  (when-let* ((name (related-files-format-place initial-places place)))
-    (if (related-files-place-exists-p place)
+  (when-let* ((name (related-files-format-place initial-places place annotate)))
+    (if (or (not annotate) (related-files-place-exists-p place))
         name
       (format "%s (create it!)" name))))
 
