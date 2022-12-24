@@ -517,17 +517,26 @@ JUMPER."
 (defun related-files--completing-read (prompt entities formatter)
   "Display PROMPT and let the user choose one of ENTITIES in the minibuffer.
 
-Before being presented to the user, each entity is formatted with
-FORMATTER, then the result has a property 'multi-category
-attached. The value of this property is a cons cell: its car is
-the catefory of the entity (as determined by
-`related-files--get-place-category') and its cdr is the formatted
-string. "
+FORMATTER is a function for formating ENTITIES. It should return
+a string for presentation to the user. It takes one entity, and
+one optional argument ANNOTATE. If ANNOTATE is non-nil, it is
+acceptable (though not necessary) to return a string with
+annotations or 'decorations'. It ANNOTATE is nil, only a 'bare'
+version should be returned.
+
+Before being presented to the user, each entity is formatted by
+FORMATTER with ANNOTATE set to t, then the result has a property
+'multi-category attached. The value of this property is a cons
+cell: its car is the category of the entity (as determined by
+`related-files--get-place-category') and its cdr is the string
+returned by FORMATTER when ANNOTATE is nil."
   (let* ((entity-string-to-entity (make-hash-table :test 'equal :size (length entities)))
 	 (format-function
-	  (lambda (entity) (let ((str (funcall formatter entity))
-			    (cat (related-files--get-place-category entity)))
-			(propertize str 'multi-category `(,cat . ,str)))))
+	  (lambda (entity) (propertize
+		       (funcall formatter entity 'annotate)
+		       'multi-category
+		       (cons (related-files--get-place-category entity)
+			     (funcall formatter entity)))))
          (entity-strings (mapcar format-function entities)))
     (cl-loop
      for entity in entities
