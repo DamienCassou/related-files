@@ -414,8 +414,8 @@ return value."
 
 If a jumper is attached to PLACE and if this jumper has a filler,
 use the filler to populate the new file with initial content."
-  (find-file place)
-  (when-let* ((jumper (get-text-property 0 :related-files-jumper place))
+  (related-files-goto-place place)
+  (when-let* ((jumper (related-files-retrieve-jumper-from-place place))
               (filler (related-files-get-filler jumper)))
     (related-files-fill filler :jumper jumper :place place)))
 
