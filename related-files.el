@@ -310,6 +310,13 @@ The default implementation assumes PLACE is a filename, and gives
 it a property :related-files-jumper, with JUMPER as its value."
   (propertize place :related-files-jumper jumper))
 
+(cl-defgeneric related-files-retrieve-jumper-from-place (place)
+  "Retrieve jumper from PLACE.
+
+The default implementation assumes PLACE is a filename, and gets
+the value of its text property :related-files-jumper."
+  (get-text-property 0 :related-files-jumper place))
+
 (cl-defgeneric related-files-format-place (initial-places place &optional annotate)
   "Format PLACE, relative to INITIAL-PLACES.
 
