@@ -63,9 +63,9 @@
 (ert-deftest related-files-test-format-place ()
   (cl-letf (((symbol-function 'file-exists-p)
              (apply-partially #'equal "/project/foo/exists.el")))
-    (should (equal (related-files--format-place "/project/foo/" "/project/foo/exists.el") "exists.el"))
-    (should (equal (related-files--format-place "/project/bar/" "/project/foo/exists.el") "../foo/exists.el"))
-    (should (equal (related-files--format-place "/project/foo/" "/project/foo/non-existing.el") "non-existing.el (create it!)"))))
+    (should (equal (related-files--format-place '("/project/foo/") "/project/foo/exists.el") "exists.el"))
+    (should (equal (related-files--format-place '("/project/bar/") "/project/foo/exists.el") "../foo/exists.el"))
+    (should (equal (related-files--format-place '("/project/foo/") "/project/foo/non-existing.el" 'annotate) "non-existing.el (create it!)"))))
 
 
 ;;; Utility Functions
