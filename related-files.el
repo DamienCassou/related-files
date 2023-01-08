@@ -159,12 +159,24 @@ MANUAL (TODO)."
   :type '(repeat :tag "Jumpers" related-files-jumper)
   :safe (lambda (jumpers) (seq-every-p (lambda (jumper) (eq 'safe (run-hook-with-args-until-success 'related-files-jumper-safety-functions jumper))) jumpers)))
 
+;;;###autoload
+(defcustom related-files-current-place-finders '(buffer-file-name
+						 current-buffer)
+  "List of functions returning the current place.
+
+Each function should return the current place in a different
+form, or nil if called in circumstances such that the format does
+not apply (i.e. the function `buffer-file-name' returns nil when
+the current buffer is not associated with a file)."
+  :group 'related-files
+  :type '(repeat function))
+
 
 ;;; Public Functions
 
 ;;;###autoload
-(defun related-files-jump (&optional jumpers current-place)
-  "Let the user choose where to go from CURRENT-PLACE by asking JUMPERS.
+(defun related-files-jump (&optional jumpers current-places)
+  "Let the user choose where to go from the current place by asking JUMPERS.
 
 Each element of JUMPERS is asked for a list of candidates and the
 resulting lists are concatenated with duplicates removed.  The
@@ -175,22 +187,23 @@ candidates.  If the resulting list contains only one item, this
 item is automatically selected.
 
 Only existing files are presented to the user.  Look at
-`related-files-make' and `related-files-jump-or-make' if you also want to be
-able to create new files.
+`related-files-make' and `related-files-jump-or-make' if you also
+want to be able to create new files.
 
 If JUMPERS is not provided, use `related-files-jumpers'.  If
-CURRENT-PLACE is not provided, use the function
-`buffer-file-name'.
+CURRENT-PLACES is not provided, try different places from
+`related-files-current-place-finders'.
 
 Interactively, a numeric prefix argument selects the jumper at
 the specified position (zero-based index) in `related-files-jumpers'."
   (interactive (list (when (numberp current-prefix-arg)
                        (list (seq-elt related-files-jumpers current-prefix-arg)))))
-  (related-files--jump-or-make jumpers current-place :include-existing-places t))
+  
+  (related-files--jump-or-make jumpers current-places :include-existing-places t))
 
 ;;;###autoload
-(defun related-files-make (&optional jumpers current-place)
-  "Let the user choose where to go from CURRENT-PLACE by asking JUMPERS.
+(defun related-files-make (&optional jumpers current-places)
+  "Let the user choose where to go from the current place by asking JUMPERS.
 
 Each element of JUMPERS is asked for a list of candidates and the
 resulting lists are concatenated with duplicates removed.  The
@@ -207,18 +220,18 @@ current file for example.  Look at `related-files-jump' and
 existing files.
 
 If JUMPERS is not provided, use `related-files-jumpers'.  If
-CURRENT-PLACE is not provided, use the function
-`buffer-file-name'.
+CURRENT-PLACES is not provided, use
+`related-files-current-place-finders'.
 
 Interactively, a numeric prefix argument selects the jumper at
 the specified position (zero-based index) in `related-files-jumpers'."
   (interactive (list (when (numberp current-prefix-arg)
                        (list (seq-elt related-files-jumpers current-prefix-arg)))))
-  (related-files--jump-or-make jumpers current-place :include-non-existing-places t))
+  (related-files--jump-or-make jumpers current-places :include-non-existing-places t))
 
 ;;;###autoload
-(defun related-files-jump-or-make (&optional jumpers current-place)
-  "Let the user choose where to go from CURRENT-PLACE by asking JUMPERS.
+(defun related-files-jump-or-make (&optional jumpers current-places)
+  "Let the user choose where to go from the current place by asking JUMPERS.
 
 Each element of JUMPERS is asked for a list of candidates and the
 resulting lists are concatenated with duplicates removed.  The
@@ -234,19 +247,19 @@ ones.  Look at `related-files-jump' and `related-files-make' if you don't
 want to mix existing and non-existing files in the same list..
 
 If JUMPERS is not provided, use `related-files-jumpers'.  If
-CURRENT-PLACE is not provided, use the function
-`buffer-file-name'.
+CURRENT-PLACES is not provided, use
+`related-files-current-place-finders'.
 
 Interactively, a numeric prefix argument selects the jumper at
 the specified position (zero-based index) in `related-files-jumpers'."
   (interactive (list (when (numberp current-prefix-arg)
                        (list (seq-elt related-files-jumpers current-prefix-arg)))))
-  (related-files--jump-or-make jumpers current-place
+  (related-files--jump-or-make jumpers current-places
                          :include-existing-places t
                          :include-non-existing-places t))
 
 
-;;; Jumpers Public API
+;;; Jumpers and Places Public API
 
 (cl-defgeneric related-files-apply (jumper place)
   "Apply JUMPER to PLACE and return related places or nil.
@@ -254,14 +267,101 @@ the specified position (zero-based index) in `related-files-jumpers'."
 PLACE is a filename and the result must be a possibly-empty list
 of filenames.
 
-The default implementation allows JUMPER to be a function.  The
-function can return either a single place or a possibly-empty
-list of places."
+The generic implementation just returns nil. This ensures that
+calling a jumper/place pair for which there is no appropriately
+typed method does not break anything -- it just doesn't return
+any places."
+  nil)
+
+(cl-defmethod related-files-apply ((jumper symbol) place)
+"Call JUMPER on PLACE."
   (funcall jumper place))
 
 (cl-defgeneric related-files-get-filler (jumper)
-  "Return a filler associated with JUMPER."
+  "Return a filler associated with JUMPER.")
+
+(cl-defgeneric related-files-get-filler ((jumper symbol))
+  "`get' jumper's property `related-files-filler'."
   (get jumper 'related-files-filler))
+
+(cl-defgeneric related-files-place-exists-p (place)
+  "Return non-nil if PLACE exists.
+
+The default implementation returns nil. This means that related
+files assumes any place without an appropriate method does not
+exist."
+  nil)
+
+(cl-defmethod related-files-place-exists-p ((place string))
+  "Call `file-exists-p'."
+  (file-exists-p place))
+
+(cl-defmethod related-files-place-exists-p ((place buffer))
+  "Call `buffer-live-p'."
+  (buffer-live-p place))
+
+(cl-defgeneric related-files-goto-place (place)
+  "Go to an existing PLACE.")
+
+(cl-defmethod related-files-goto-place ((place string))
+  "Call `find-file'."
+  (find-file place))
+
+(cl-defmethod related-files-goto-place ((place buffer))
+  "Call `switch-to-buffer'."
+  (switch-to-buffer place))
+
+(cl-defgeneric related-files-attach-jumper-to-place (jumper place)
+  "Attach JUMPER to PLACE.
+
+Return the modified version of PLACE.")
+
+(cl-defmethod related-files-attach-jumper-to-place (jumper (place string))
+  "Set PLACE :related-files-jumper property to JUMPER."
+  (propertize place :related-files-jumper jumper))
+
+(cl-defmethod related-files-attach-jumper-to-place (jumper (place buffer))
+  "Set `related-files-jumper' to JUMPER, locally in PLACE."
+  (with-current-buffer place
+    (setq-local related-files-jumper jumper))
+  place)
+
+(cl-defgeneric related-files-retrieve-jumper-from-place (place)
+  "Retrieve jumper attached to PLACE.")
+
+(cl-defmethod related-files-retrieve-jumper-from-place ((place string))
+  "Get value of :related-files-jumper text property."
+  (get-text-property 0 :related-files-jumper place))
+
+(cl-defmethod related-files-retrieve-jumper-from-place ((place buffer))
+  "Get the value of `related-files-jumper' in PLACE."
+  (with-current-buffer place
+    related-files-jumper))
+
+(cl-defgeneric related-files-format-place (initial-places place &optional annotate)
+  "Format PLACE, relative to INITIAL-PLACES.
+
+If ANNOTATE is non-nil, it is ok for this function to return an
+'annotated' or 'decorated' version of PLACE (with extra
+information). If ANNOTATE is nil,a 'bare' version must be
+returned.
+
+The default implementation ignores INITIAL-PLACES and ANNOTATE,
+and prints PLACE with `format'."
+  (format "%s" place))
+
+(cl-defmethod related-files-format-place (initial-places (place string) &optional annotate)
+  "Format PLACE relative to the first string in INITIAL-PLACES.
+
+If INITIAL-PLACES contains no strings, just return PLACE."
+  (if-let ((initial-file (seq-find #'stringp initial-places))
+	   (initial-directory (file-name-directory initial-file)))
+      (file-relative-name place initial-directory)
+    place))
+
+(cl-defgeneric related-files-format-place (initial-places (place buffer) &optional annotate)
+  "Call `buffer-name'."
+  (buffer-name place))
 
 
 ;;; Filler Public API
@@ -277,44 +377,76 @@ Beyond the filler, this function is called with the :jumper and
 
 ;;; Functions Manipulating Places
 
-(defun related-files--choose-place (places initial-place)
+(defun related-files--get-current-places ()
+  "Return a list of different forms of the current place."
+  (delete-dups
+   (seq-remove
+    #'null
+    (mapcar #'funcall related-files-current-place-finders))))
+
+(defun related-files--choose-place (places initial-places)
   "Let the user pick one of PLACES and return it.
 
-PLACES is a list of filenames and INITIAL-PLACE is a filename.
+PLACES is a list of filenames and INITIAL-PLACES is a list of
+places.
 
 INITIAL-PLACE is the place that was current when the user started
 related-files.  It is used to format each place in PLACES."
   (cond
    ((length= places 0) (user-error "No place to go to.  Consider configuring `related-files-jumpers' or using `related-files-make'") nil)
    ((length= places 1) (car places))
-   (t (let ((initial-directory (file-name-directory initial-place)))
-        (related-files--completing-read "Place: " places (apply-partially #'related-files--format-place initial-directory))))))
+   (t (related-files--completing-read "Place: " places (apply-partially #'related-files--format-place initial-places)))))
 
 (defun related-files--act-on-place (place)
   "Either open or create PLACE, a filename."
-  (if (file-exists-p place)
-      (find-file place)
+  (if (related-files-place-exists-p place)
+      (related-files-goto-place place)
     (related-files--make-place place)))
 
-(defun related-files--format-place (initial-directory place)
+(defcustom related-files-place-category-tests
+  '(((pred stringp) 'file)
+    ((pred bufferp) 'buffer))
+  "List of tests for getting type of a place.
+
+This variable is passed as an argument list to `pcase', so must
+take the relevant form. The return value of each clause must be a
+symbol for a category. See info node `(elisp)Programmed
+Completion' for more information."
+  ;; TODO pcase arg list type? (for :type)
+  :group 'related-files)
+
+(defmacro related-files--get-place-category (place)
+  "Get completion category for PLACE.
+
+Use `pcase' to check PLACE against the patterns in
+`related-files-place-category-tests'. If none succeed, return
+`type-of' PLACE."
+  `(pcase ,place
+     ,@related-files-place-category-tests
+     (t (type-of ,place))))
+
+(defun related-files--format-place (initial-places place &optional annotate)
   "Return a string representing PLACE.
 
-INITIAL-DIRECTORY is used to format PLACE relatively.
+INITIAL-PLACES is a list different objects, each representing the
+initial place in a different way (e.g. a filename, a buffer
+object, etc.). It is used to format PLACE relatively.
 
-If PLACE doesn't exist, append \"(create it!)\" to the return
-value."
-  (when-let* ((relative-name (file-relative-name place initial-directory)))
-    (if (file-exists-p place)
-        relative-name
-      (format "%s (create it!)" relative-name))))
+If PLACE doesn't exist (as determined by
+`related-files-place-exists-p'), append \"(create it!)\" to the
+return value."
+  (when-let* ((name (related-files-format-place initial-places place annotate)))
+    (if (or (not annotate) (related-files-place-exists-p place))
+        name
+      (format "%s (create it!)" name))))
 
 (defun related-files--make-place (place)
   "Create the file at PLACE.
 
 If a jumper is attached to PLACE and if this jumper has a filler,
 use the filler to populate the new file with initial content."
-  (find-file place)
-  (when-let* ((jumper (get-text-property 0 :related-files-jumper place))
+  (related-files-goto-place place)
+  (when-let* ((jumper (related-files-retrieve-jumper-from-place place))
               (filler (related-files-get-filler jumper)))
     (related-files-fill filler :jumper jumper :place place)))
 
@@ -341,65 +473,69 @@ use the filler to populate the new file with initial content."
 
 ;;; Utility Functions
 
-(cl-defun related-files--jump-or-make (jumpers current-place &key include-existing-places include-non-existing-places)
-  "Let the user choose where to go from CURRENT-PLACE by asking JUMPERS.
+(cl-defun related-files--jump-or-make (jumpers current-places &key include-existing-places include-non-existing-places)
+  "Let the user choose where to go from the current-place by asking JUMPERS.
 
 Existing files are presented to the user if
 INCLUDE-EXISTING-PLACES is non-nil.  Non-existing files are
 presented to the user if INCLUDE-NON-EXISTING-PLACES is non-nil.
 
 If JUMPERS is not provided, use `related-files-jumpers'.  If
-CURRENT-PLACE is not provided, use the function
-`buffer-file-name'."
+CURRENT-PLACES is not provided, use `related-files-current-place-finders'."
   (let* ((jumpers (or jumpers related-files-jumpers))
-         (current-place (or current-place (buffer-file-name))))
+         (current-places (or current-places (related-files--get-current-places))))
     (cond ((not jumpers)
            (user-error "No jumpers.  Consider configuring `related-files-jumpers'"))
-          ((not current-place)
+          ((not current-places)
            (user-error "Related-Files only works from file-based buffers"))
           (t
            (let ((existing-places (when include-existing-places
-                                    (related-files--collect-existing-places jumpers current-place)))
+                                    (related-files--collect-existing-places jumpers current-places)))
                  (non-existing-places (when include-non-existing-places
-                                        (related-files--collect-non-existing-places jumpers current-place))))
-             (when-let* ((place (related-files--choose-place (append existing-places non-existing-places) current-place)))
+                                        (related-files--collect-non-existing-places jumpers current-places))))
+             (when-let* ((place (related-files--choose-place (append existing-places non-existing-places) current-places)))
                (related-files--act-on-place place)))))))
 
-(defun related-files--collect-existing-places (jumpers current-place)
-  "Return a list of places that can be accessed from CURRENT-PLACE with JUMPERS.
+(defun related-files--collect-existing-places (jumpers current-places)
+  "Return a list of places that can accessible from the current place with JUMPERS.
 
-Each jumper in JUMPERS is not only called with CURRENT-PLACE as
-argument but also with all places generated by other jumpers,
-recursively.  Only existing places are considered and returned.
+Each jumper in JUMPERS is not only called with each element of
+CURRENT-PLACES as argument but also with all places generated by
+other jumpers, recursively.  Only existing places are considered
+and returned.
 
 The returned value doesn't contain CURRENT-PLACE."
-  (when current-place
+  (when current-places
     (let* ((places-result nil)
            (places-tried nil)
-           (places-queue (list current-place)))
+           (places-queue (copy-sequence current-places)))
       (while places-queue
         (when-let* ((place (pop places-queue))
-                    ((file-exists-p place))
+		    ((related-files-place-exists-p place))
                     ((not (seq-contains-p places-tried place))))
-          (unless (equal place current-place) (push place places-result))
-          (let ((new-places (related-files--call-jumpers jumpers place)))
+          (unless (member place current-places) (push place places-result))
+          (let ((new-places (related-files--call-jumpers jumpers `(,place))))
             (push place places-tried)
             (setq places-queue (nconc places-queue new-places)))))
       places-result)))
 
-(defun related-files--collect-non-existing-places (jumpers current-place)
-  "Return a list of places that can be accessed from CURRENT-PLACE with JUMPERS.
+(defun related-files--collect-non-existing-places (jumpers current-places)
+  "Return a list of places accessible from the current place with JUMPERS.
 
 Only non-existing places are considered and returned.  The
-returned value doesn't contain CURRENT-PLACE."
+returned value doesn't contain any places in CURRENT-PLACES."
   (cl-delete-if
-   (lambda (place) (or (equal place current-place)
-                       (file-exists-p place)))
-   (related-files--call-jumpers jumpers current-place)))
+   (lambda (place) (or (member place current-places)
+                       (related-files-place-exists-p place)))
+   (related-files--call-jumpers jumpers current-places)))
 
-(defun related-files--call-jumpers (jumpers place)
-  "Return a list of places that can be accessed from PLACE with JUMPERS."
-  (mapcan (apply-partially #'related-files--call-jumper place) jumpers))
+(defun related-files--call-jumpers (jumpers places)
+  "Return a list of places that can be accessed from PLACES with JUMPERS."
+  (mapcan (lambda (place)
+	    (mapcan
+	     (apply-partially #'related-files--call-jumper place)
+	     jumpers))
+	  places))
 
 (defun related-files--call-jumper (place jumper)
   "Return a list of places that can be accessed from PLACE with JUMPER."
@@ -414,17 +550,32 @@ returned value doesn't contain CURRENT-PLACE."
 
 Each item of the return value remembers it was created with
 JUMPER."
-  (mapcar
-   (lambda (place) (propertize place :related-files-jumper jumper))
-   places))
+  (mapcar (apply-partially #'related-files-attach-jumper-to-place jumper) places))
 
 (defun related-files--completing-read (prompt entities formatter)
   "Display PROMPT and let the user choose one of ENTITIES in the minibuffer.
 
-Format each entity with FORMATTER before presenting it to the
-user."
+FORMATTER is a function for formating ENTITIES. It should return
+a string for presentation to the user. It takes one entity, and
+one optional argument ANNOTATE. If ANNOTATE is non-nil, it is
+acceptable (though not necessary) to return a string with
+annotations or 'decorations'. It ANNOTATE is nil, only a 'bare'
+version should be returned.
+
+Before being presented to the user, each entity is formatted by
+FORMATTER with ANNOTATE set to t, then the result has a property
+'multi-category attached. The value of this property is a cons
+cell: its car is the category of the entity (as determined by
+`related-files--get-place-category') and its cdr is the string
+returned by FORMATTER when ANNOTATE is nil."
   (let* ((entity-string-to-entity (make-hash-table :test 'equal :size (length entities)))
-         (entity-strings (mapcar formatter entities)))
+	 (format-function
+	  (lambda (entity) (propertize
+		       (funcall formatter entity 'annotate)
+		       'multi-category
+		       (cons (related-files--get-place-category entity)
+			     (funcall formatter entity)))))
+         (entity-strings (mapcar format-function entities)))
     (cl-loop
      for entity in entities
      for entity-string in entity-strings
@@ -438,7 +589,7 @@ user."
 					(app car 'boundaries))
 				   `(boundaries 0 . ,(length (cdr flag))))
 				  ('metadata
-				   `(metadata (category . file))))))
+				   `(metadata (category . multi-category))))))
 		(entity-string (completing-read prompt entity-table nil t)))
       (gethash entity-string entity-string-to-entity))))
 

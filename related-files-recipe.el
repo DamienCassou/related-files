@@ -36,7 +36,7 @@
 
 ;;; Overrides of Public Methods
 
-(cl-defmethod related-files-apply ((jumper (head recipe)) place)
+(cl-defmethod related-files-apply ((jumper (head recipe)) (place string))
   "Return a list of new places built by applying recipe JUMPER to PLACE."
   (append
    (apply #'related-files-recipe--apply-filename-jumper place (cdr jumper))
