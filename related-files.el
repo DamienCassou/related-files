@@ -321,10 +321,10 @@ Return the modified version of PLACE.")
   (propertize place :related-files-jumper jumper))
 
 (cl-defgeneric related-files-retrieve-jumper-from-place (place)
-  "Retrieve jumper from PLACE.
+  "Retrieve jumper attached to PLACE.")
 
-The default implementation assumes PLACE is a filename, and gets
-the value of its text property :related-files-jumper."
+(cl-defmethod related-files-retrieve-jumper-from-place ((place string))
+  "Get value of :related-files-jumper text property."
   (get-text-property 0 :related-files-jumper place))
 
 (cl-defgeneric related-files-format-place (initial-places place &optional annotate)
