@@ -320,6 +320,12 @@ Return the modified version of PLACE.")
   "Set PLACE :related-files-jumper property to JUMPER."
   (propertize place :related-files-jumper jumper))
 
+(cl-defmethod related-files-attach-jumper-to-place (jumper (place buffer))
+  "Set `related-files-jumper' to JUMPER, locally in PLACE."
+  (with-current-buffer place
+    (setq-local related-files-jumper jumper))
+  place)
+
 (cl-defgeneric related-files-retrieve-jumper-from-place (place)
   "Retrieve jumper attached to PLACE.")
 
