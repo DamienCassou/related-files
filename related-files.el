@@ -301,9 +301,10 @@ exist."
   (buffer-live-p place))
 
 (cl-defgeneric related-files-goto-place (place)
-  "Go to an existing PLACE.
+  "Go to an existing PLACE.")
 
-The default implementation assumes PLACE is a filename."
+(cl-defmethod related-files-goto-place ((place string))
+  "Call `find-file'."
   (find-file place))
 
 (cl-defmethod related-files-goto-place ((place buffer))
