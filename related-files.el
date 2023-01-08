@@ -278,7 +278,10 @@ any places."
   (funcall jumper place))
 
 (cl-defgeneric related-files-get-filler (jumper)
-  "Return a filler associated with JUMPER."
+  "Return a filler associated with JUMPER.")
+
+(cl-defgeneric related-files-get-filler ((jumper symbol))
+  "`get' jumper's property `related-files-filler'."
   (get jumper 'related-files-filler))
 
 (cl-defgeneric related-files-place-exists-p (place)
