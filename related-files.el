@@ -314,10 +314,10 @@ exist."
 (cl-defgeneric related-files-attach-jumper-to-place (jumper place)
   "Attach JUMPER to PLACE.
 
-Return the modified version of PLACE.
+Return the modified version of PLACE.")
 
-The default implementation assumes PLACE is a filename, and gives
-it a property :related-files-jumper, with JUMPER as its value."
+(cl-defmethod related-files-attach-jumper-to-place (jumper (place string))
+  "Set PLACE :related-files-jumper property to JUMPER."
   (propertize place :related-files-jumper jumper))
 
 (cl-defgeneric related-files-retrieve-jumper-from-place (place)
