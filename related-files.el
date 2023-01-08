@@ -333,6 +333,11 @@ Return the modified version of PLACE.")
   "Get value of :related-files-jumper text property."
   (get-text-property 0 :related-files-jumper place))
 
+(cl-defmethod related-files-retrieve-jumper-from-place ((place buffer))
+  "Get the value of `related-files-jumper' in PLACE."
+  (with-current-buffer place
+    related-files-jumper))
+
 (cl-defgeneric related-files-format-place (initial-places place &optional annotate)
   "Format PLACE, relative to INITIAL-PLACES.
 
