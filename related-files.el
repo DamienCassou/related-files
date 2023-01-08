@@ -335,12 +335,18 @@ If ANNOTATE is non-nil, it is ok for this function to return an
 information). If ANNOTATE is nil,a 'bare' version must be
 returned.
 
-The default implementation assumes that PLACE is a filename, and
-looks for a string in INITIAL-PLACES, which represents the
-current file."
-  (let* ((initial-file (seq-find #'stringp initial-places))
-	 (initial-directory (file-name-directory initial-file)))
-   (file-relative-name place initial-directory)))
+The default implementation ignores INITIAL-PLACES and ANNOTATE,
+and prints PLACE with `format'."
+  (format "%s" place))
+
+(cl-defmethod related-files-format-place (initial-places (place string) &optional annotate)
+  "Format PLACE relative to the first string in INITIAL-PLACES.
+
+If INITIAL-PLACES contains no strings, just return PLACE."
+  (if-let ((initial-file (seq-find #'stringp initial-places))
+	   (initial-directory (file-name-directory initial-file)))
+      (file-relative-name place initial-directory)
+    place))
 
 
 ;;; Filler Public API
