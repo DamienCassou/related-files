@@ -359,6 +359,10 @@ If INITIAL-PLACES contains no strings, just return PLACE."
       (file-relative-name place initial-directory)
     place))
 
+(cl-defgeneric related-files-format-place (initial-places (place buffer) &optional annotate)
+  "Call `buffer-name'."
+  (buffer-name place))
+
 
 ;;; Filler Public API
 
