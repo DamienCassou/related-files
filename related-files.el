@@ -287,7 +287,13 @@ any places."
 (cl-defgeneric related-files-place-exists-p (place)
   "Return non-nil if PLACE exists.
 
-The default implementation assumes PLACE is a filename."
+The default implementation returns nil. This means that related
+files assumes any place without an appropriate method does not
+exist."
+  nil)
+
+(cl-defmethod related-files-place-exists-p ((place string))
+  "Call `file-exists-p'."
   (file-exists-p place))
 
 (cl-defmethod related-files-place-exists-p ((place buffer))
