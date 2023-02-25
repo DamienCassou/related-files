@@ -55,6 +55,16 @@
                  "/emacs-src/test/lisp/abbrev-tests.el"
                  "/emacs-src/lisp/test/abbrev-tests.el"))))))
 
+(ert-deftest related-files-recipe-test-apply-filename-jumper-with-no-suffix-manipulation ()
+  (cl-letf (((symbol-function 'file-exists-p) (lambda (_) t)))
+    (let* ((place "/emacs-src/lisp/Abbrev.el")
+           (places (related-files-recipe--apply-filename-jumper place :add-directory "test")))
+      (should (seq-set-equal-p
+               places
+               '("/test/emacs-src/lisp/Abbrev.el"
+                 "/emacs-src/test/lisp/Abbrev.el"
+                 "/emacs-src/lisp/test/Abbrev.el"))))))
+
 (ert-deftest related-files-recipe-test-unapply-filename-jumper ()
   (cl-letf (((symbol-function 'file-exists-p)
              (lambda (_) t)))

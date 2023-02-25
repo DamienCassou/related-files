@@ -69,7 +69,9 @@ the case of the filename.
 ADD-DIRECTORY is a string (e.g., \"test\") that is added next to
 directory names in PLACE."
   (when-let* (((related-files-recipe--suffix-can-be-changed-p place add-suffix remove-suffix))
-              (path-without-suffix (substring place 0 (- (length remove-suffix))))
+              (path-without-suffix (if (string-empty-p remove-suffix)
+                                       place
+                                     (substring place 0 (- (length remove-suffix)))))
               (path-with-suffix (concat path-without-suffix add-suffix))
               (path-with-changed-case (related-files-recipe--apply-to-filename
                                        path-with-suffix
@@ -86,7 +88,9 @@ ADD-DIRECTORY is the opposite of the one of
 `related-files-recipe--apply-filename-jumper'.  For example, ADD-SUFFIX
 should already be present in PLACE and will be removed from it."
   (when-let* (((related-files-recipe--suffix-can-be-changed-p place remove-suffix add-suffix))
-              (path-without-suffix (substring place 0 (- (length add-suffix))))
+              (path-without-suffix (if (string-empty-p add-suffix)
+                                       place
+                                     (substring place 0 (- (length add-suffix)))))
               (path-with-suffix (concat path-without-suffix remove-suffix))
               (path-with-changed-case (related-files-recipe--apply-to-filename
                                        path-with-suffix
