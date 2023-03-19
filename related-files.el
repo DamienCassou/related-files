@@ -161,7 +161,7 @@ MANUAL (TODO)."
 
 ;;;###autoload
 (defcustom related-files-current-place-finders '(buffer-file-name
-						 current-buffer)
+                                                 current-buffer)
   "List of functions returning the current place.
 
 Each function should return the current place in a different
@@ -182,7 +182,7 @@ symbol for a category.  See info node `(elisp)Programmed
 Completion' for more information.  The customization type is an
 approximation of this."
   :type '(repeat (list (choice symbol integer string cons sexp)
-		       symbol))
+                       symbol))
   :group 'related-files)
 
 
@@ -213,7 +213,7 @@ the specified position (zero-based index) in
 `related-files-jumpers'."
   (interactive (list (when (numberp current-prefix-arg)
                        (list (seq-elt related-files-jumpers current-prefix-arg)))))
-  
+
   (related-files--jump-or-make jumpers current-places :include-existing-places t))
 
 ;;;###autoload
@@ -470,7 +470,7 @@ The returned value doesn't contain CURRENT-PLACE."
            (places-queue (copy-sequence current-places)))
       (while places-queue
         (when-let* ((place (pop places-queue))
-		    ((related-files-place-exists-p place))
+                    ((related-files-place-exists-p place))
                     ((not (seq-contains-p places-tried place))))
           (unless (member place current-places) (push place places-result))
           (let ((new-places (related-files--call-jumpers jumpers `(,place))))
@@ -491,10 +491,10 @@ returned value doesn't contain any places in CURRENT-PLACES."
 (defun related-files--call-jumpers (jumpers places)
   "Return a list of places that can be accessed from PLACES with JUMPERS."
   (mapcan (lambda (place)
-	    (mapcan
-	     (apply-partially #'related-files--call-jumper place)
-	     jumpers))
-	  places))
+            (mapcan
+             (apply-partially #'related-files--call-jumper place)
+             jumpers))
+          places))
 
 (defun related-files--call-jumper (place jumper)
   "Return a list of places that can be accessed from PLACE with JUMPER."
@@ -528,28 +528,28 @@ cell: its car is the category of the entity (as determined by
 `related-files--get-place-category') and its cdr is the string
 returned by FORMATTER when ANNOTATE is nil."
   (let* ((entity-string-to-entity (make-hash-table :test 'equal :size (length entities)))
-	 (format-function
-	  (lambda (entity) (propertize
-		       (funcall formatter entity 'annotate)
-		       'multi-category
-		       (cons (related-files--get-place-category entity)
-			     (funcall formatter entity)))))
+         (format-function
+          (lambda (entity) (propertize
+                       (funcall formatter entity 'annotate)
+                       'multi-category
+                       (cons (related-files--get-place-category entity)
+                             (funcall formatter entity)))))
          (entity-strings (mapcar format-function entities)))
     (cl-loop
      for entity in entities
      for entity-string in entity-strings
      do (puthash entity-string entity entity-string-to-entity))
     (when-let* ((entity-table (lambda (str pred flag)
-				(pcase flag
-				  ('nil (try-completion str entity-strings pred))
-				  ('t (all-completions str entity-strings pred))
-				  ('lambda (test-completion str entity-strings pred))
-				  ((and (pred consp)
-					(app car 'boundaries))
-				   `(boundaries 0 . ,(length (cdr flag))))
-				  ('metadata
-				   `(metadata (category . multi-category))))))
-		(entity-string (completing-read prompt entity-table nil t)))
+                                (pcase flag
+                                  ('nil (try-completion str entity-strings pred))
+                                  ('t (all-completions str entity-strings pred))
+                                  ('lambda (test-completion str entity-strings pred))
+                                  ((and (pred consp)
+                                        (app car 'boundaries))
+                                   `(boundaries 0 . ,(length (cdr flag))))
+                                  ('metadata
+                                   `(metadata (category . multi-category))))))
+                (entity-string (completing-read prompt entity-table nil t)))
       (gethash entity-string entity-string-to-entity))))
 
 (defun related-files-add-jumper-type (customization-type)

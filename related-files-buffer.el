@@ -23,7 +23,8 @@
 
 ;;; Commentary:
 
-;; Provide buffers as a type of place for `related-files.el'.
+;; Provide buffers as a type of place for `related-files.el'.  A
+;; buffer-based place is the buffer.
 
 ;;; Code:
 
@@ -41,19 +42,21 @@
   "Call `switch-to-buffer' on PLACE."
   (switch-to-buffer place))
 
+(defvar-local related-files-buffer--jumper nil
+  "Remember which jumper was used to reach the current buffer.")
+
 ;;;###autoload
 (cl-defmethod related-files-attach-jumper-to-place (jumper (place buffer))
   "Set `related-files-jumper' to JUMPER, locally in PLACE."
   (with-current-buffer place
-    (setq-local related-files-jumper jumper))
+    (setq-local related-files-buffer--jumper jumper))
   place)
 
 ;;;###autoload
 (cl-defmethod related-files-retrieve-jumper-from-place ((place buffer))
   "Get the value of `related-files-jumper' in PLACE."
-  (defvar related-files-jumper)
   (with-current-buffer place
-    related-files-jumper))
+    related-files-buffer--jumper))
 
 ;;;###autoload
 (cl-defmethod related-files-format-place (_initial-places (place buffer) &optional _annotate)

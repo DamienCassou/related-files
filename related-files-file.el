@@ -23,7 +23,8 @@
 
 ;;; Commentary:
 
-;; Provide methods or the `related-files' public API for PLACEs as files.
+;; Provide methods for the `related-files' public API for PLACEs as
+;; files.  A file-based place is a string containing the path to the file.
 
 ;;; Code:
 
