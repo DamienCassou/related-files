@@ -32,6 +32,7 @@
 (require 'subr-x)
 (require 'map)
 (require 'related-files)
+(require 'related-files-file)
 
 
 ;;; Overrides of Public Methods
