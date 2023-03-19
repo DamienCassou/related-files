@@ -32,27 +32,22 @@
 
 
 
-;;;###autoload
 (cl-defmethod related-files-place-exists-p ((place string))
   "Call `file-exists-p' on PLACE."
   (file-exists-p place))
 
-;;;###autoload
 (cl-defmethod related-files-goto-place ((place string))
   "Call `find-file' on PLACE."
   (find-file place))
 
-;;;###autoload
 (cl-defmethod related-files-attach-jumper-to-place (jumper (place string))
   "Set PLACE :related-files-jumper property to JUMPER."
   (propertize place :related-files-jumper jumper))
 
-;;;###autoload
 (cl-defmethod related-files-retrieve-jumper-from-place ((place string))
   "Get value of :related-files-jumper text property in PLACE."
   (get-text-property 0 :related-files-jumper place))
 
-;;;###autoload
 (cl-defmethod related-files-format-place (initial-places (place string) &optional _annotate)
   "Format PLACE relative to the first string in INITIAL-PLACES.
 
