@@ -1,6 +1,6 @@
 ;;; related-files.el --- Easily find files related to the current one  -*- lexical-binding: t; -*-
 
-;; Copyright (C) 2022  Damien Cassou
+;; Copyright (C) 2022-2023  Damien Cassou
 
 ;; Author: Damien Cassou <damien@cassou.me>
 ;; Version: 0.3.0
