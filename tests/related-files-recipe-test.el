@@ -1,6 +1,6 @@
 ;;; related-files-recipe-test.el --- Tests for related-files-recipe  -*- lexical-binding: t; -*-
 
-;; Copyright (C) 2022  Damien Cassou
+;; Copyright (C) 2022-2023  Damien Cassou
 
 ;; Author: Damien Cassou <damien@cassou.me>
 ;; Version: 0.3.0
